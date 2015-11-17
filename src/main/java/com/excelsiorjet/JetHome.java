@@ -36,7 +36,10 @@ public class JetHome {
     private static String MARKER_FILE_SUFFIX = ".home";
 
     public static final String BIN_DIR = "bin";
+
     private String jetHome;
+
+    private JetEdition edition;
 
     /**
      * @param jetHome Excelsior JET home directory
@@ -65,13 +68,14 @@ public class JetHome {
         return getJetVersion(jetHome) >= MIN_SUPPORTED_JET_VERSION;
     }
 
-    private static void checkJetHome(String jetHome, String errorPrefix) throws JetHomeException {
+    private void checkAndSetJetHome(String jetHome, String errorPrefix) throws JetHomeException {
         if (!isJetDir(jetHome)) {
             throw new JetHomeException(Txt.s("JetHome.BadJETHomeDir.Error", errorPrefix, jetHome));
         }
         if (!isSupportedJetVersion(jetHome)) {
             throw new JetHomeException(Txt.s("JetHome.UnsupportedJETHomeDir.Error", errorPrefix, jetHome));
         }
+        this.jetHome = jetHome;
     }
 
     /**
@@ -85,14 +89,12 @@ public class JetHome {
             // expand "~/" on Unixes
             jetHome = System.getProperty("user.home") + jetHome.substring(1);
         }
-        checkJetHome(jetHome, Txt.s("JetHome.PluginParameter.Error.Prefix"));
-        this.jetHome = jetHome;
+        checkAndSetJetHome(jetHome, Txt.s("JetHome.PluginParameter.Error.Prefix"));
     }
 
     private boolean trySetJetHome(String jetHome, String errorPrefix) throws JetHomeException {
         if (!Utils.isEmpty(jetHome)) {
-            checkJetHome(jetHome, errorPrefix);
-            this.jetHome = jetHome;
+            checkAndSetJetHome(jetHome, errorPrefix);
             return true;
         }
         return false;
@@ -147,5 +149,12 @@ public class JetHome {
 
     private static boolean isJetDir(String jetHome) {
         return isJetBinDir(getJetBinDirectory(jetHome));
+    }
+
+    public JetEdition getEdition() throws JetHomeException {
+        if (edition == null) {
+            edition = JetEdition.detectEdition(this);
+        }
+        return edition;
     }
 }
